@@ -1,4 +1,4 @@
-(function(){
+
 let productos = JSON.parse(localStorage.getItem("productos")) || [];
 let historial = JSON.parse(localStorage.getItem("historial")) || [];
 
@@ -6,7 +6,35 @@ document.addEventListener("DOMContentLoaded", () => {
   mostrarProductos();
   mostrarHistorial();
   actualizarSelectorProductos();
+  mostrarMensajeAyuda();
 });
+
+function mostrarMensaje(mensaje, tipo = "success") {
+  const alerta = document.createElement("div");
+  alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-2`;
+  alerta.role = "alert";
+  alerta.innerHTML = `
+    ${mensaje}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+  document.querySelector(".container").prepend(alerta);
+
+  setTimeout(() => {
+    alerta.classList.remove("show");
+    alerta.classList.add("hide");
+  }, 4000);
+}
+
+function mostrarMensajeAyuda() {
+  const ayuda = document.createElement("div");
+  ayuda.className = "alert alert-info alert-dismissible fade show";
+  ayuda.role = "alert";
+  ayuda.innerHTML = `
+    Puedes buscar productos por <strong>nombre</strong> o <strong>código</strong> usando la barra de búsqueda debajo de "Productos".
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+  document.querySelector(".container").prepend(ayuda);
+}
 
 function agregarProducto() {
   const codigo = document.getElementById("codigo").value.trim();
@@ -15,12 +43,12 @@ function agregarProducto() {
   const stockMin = parseInt(document.getElementById("stock-min").value);
 
   if (!codigo || !nombre || isNaN(stock) || isNaN(stockMin)) {
-    alert("Completa todos los campos correctamente.");
+    mostrarMensaje("Completa todos los campos correctamente.", "danger");
     return;
   }
 
   if (productos.some(p => p.codigo === codigo)) {
-    alert("Ya existe un producto con ese código.");
+    mostrarMensaje("Ya existe un producto con ese código.", "warning");
     return;
   }
 
@@ -30,6 +58,7 @@ function agregarProducto() {
   mostrarProductos();
   actualizarSelectorProductos();
   limpiarFormulario();
+  mostrarMensaje("Producto agregado exitosamente.");
 }
 
 function mostrarProductos(filtro = "") {
@@ -62,6 +91,7 @@ function eliminarProducto(index) {
     localStorage.setItem("productos", JSON.stringify(productos));
     mostrarProductos();
     actualizarSelectorProductos();
+    mostrarMensaje("Producto eliminado correctamente.", "warning");
   }
 }
 
@@ -89,18 +119,18 @@ function registrarMovimiento() {
   const cantidad = parseInt(document.getElementById("cantidad-movimiento").value);
 
   if (!codigo || !tipo || isNaN(cantidad) || cantidad <= 0) {
-    alert("Completa correctamente todos los campos.");
+    mostrarMensaje("Completa correctamente todos los campos para registrar movimiento.", "danger");
     return;
   }
 
   const index = productos.findIndex(p => p.codigo === codigo);
   if (index === -1) {
-    alert("Producto no encontrado.");
+    mostrarMensaje("Producto no encontrado.", "danger");
     return;
   }
 
   if (tipo === "salida" && productos[index].stock < cantidad) {
-    alert("Stock insuficiente.");
+    mostrarMensaje("Stock insuficiente para salida.", "danger");
     return;
   }
 
@@ -122,6 +152,7 @@ function registrarMovimiento() {
   mostrarHistorial();
   document.getElementById("cantidad-movimiento").value = "";
   document.getElementById("producto-movimiento").value = "";
+  mostrarMensaje("Movimiento registrado correctamente.");
 }
 
 function mostrarHistorial() {
@@ -142,7 +173,7 @@ function filtrarProductos() {
 
 function exportarHistorialExcel() {
   if (historial.length === 0) {
-    alert("No hay movimientos registrados para exportar.");
+    mostrarMensaje("No hay movimientos registrados para exportar.", "warning");
     return;
   }
 
@@ -160,5 +191,5 @@ function exportarHistorialExcel() {
 
   const nombreArchivo = \`Historial_Bodega_\${new Date().toISOString().slice(0,10)}.xlsx\`;
   XLSX.writeFile(libro, nombreArchivo);
+  mostrarMensaje("Historial exportado a Excel correctamente.");
 }
-})();
